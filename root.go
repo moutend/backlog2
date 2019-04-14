@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	backlog "github.com/moutend/go-backlog"
@@ -29,8 +30,20 @@ var rootCommand = &cobra.Command{
 
 		return nil
 	},
+	PersistentPostRunE: func(c *cobra.Command, args []string) error {
+		command := c
+		commands := []string{}
 
-	Run: func(c *cobra.Command, args []string) {
+		for {
+			commands = append(commands, command.Use)
+
+			if command = command.Parent(); command == nil {
+				break
+			}
+		}
+
+		fmt.Println("@@@", commands)
+		return nil
 	},
 }
 
