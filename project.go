@@ -113,7 +113,9 @@ func readProjects() ([]backlog.Project, error) {
 
 	return projects, nil
 }
+
 func init() {
 	projectCommand.AddCommand(projectListCommand)
+
 	rootCommand.AddCommand(projectCommand)
 }
