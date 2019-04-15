@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
@@ -54,6 +55,10 @@ var projectListCommand = &cobra.Command{
 }
 
 func fetchProjects() error {
+	if time.Now().Sub(lastExecuted(projectsCachePath)) < 24*time.Hour {
+		return nil
+	}
+
 	projects, err := client.GetProjects(nil)
 	if err != nil {
 		return err
@@ -74,6 +79,9 @@ func fetchProjects() error {
 		if err := ioutil.WriteFile(path, data, 0644); err != nil {
 			return err
 		}
+	}
+	if err := setLastExecuted(projectsCachePath); err != nil {
+		return err
 	}
 
 	return nil

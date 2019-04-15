@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
@@ -56,7 +57,7 @@ var repositoryListCommand = &cobra.Command{
 				return err
 			}
 
-			fmt.Printf("- %v %v\n", project.ProjectKey, project.Name)
+			fmt.Printf("- [%s] %s\n", project.ProjectKey, project.Name)
 
 			for _, repository := range repositories {
 				fmt.Printf("  - %v\n", repository.Name)
@@ -68,6 +69,10 @@ var repositoryListCommand = &cobra.Command{
 }
 
 func fetchRepositories(projectId uint64) error {
+	if time.Now().Sub(lastExecuted(repositoriesCachePath)) < 24*time.Hour {
+		return nil
+	}
+
 	repositories, err := client.GetRepositories(projectId, nil)
 	if err != nil {
 		return err
@@ -88,6 +93,10 @@ func fetchRepositories(projectId uint64) error {
 		if err := ioutil.WriteFile(path, data, 0644); err != nil {
 			return err
 		}
+	}
+
+	if err := setLastExecuted(repositoriesCachePath); err != nil {
+		return err
 	}
 
 	return nil
