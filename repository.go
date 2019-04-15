@@ -36,6 +36,7 @@ var repositoryListCommand = &cobra.Command{
 		if err := repositoryCommand.RunE(c, args); err != nil {
 			return err
 		}
+
 		if err := fetchProjects(); err != nil {
 			return err
 		}
@@ -49,15 +50,17 @@ var repositoryListCommand = &cobra.Command{
 			if err := fetchRepositories(project.Id); err != nil {
 				return err
 			}
-		}
 
-		repositories, err := readRepositories()
-		if err != nil {
-			return err
-		}
+			repositories, err := readRepositories(project.Id)
+			if err != nil {
+				return err
+			}
 
-		for _, repository := range repositories {
-			fmt.Printf("- %v\n", repository.Name)
+			fmt.Printf("- %v %v\n", project.ProjectKey, project.Name)
+
+			for _, repository := range repositories {
+				fmt.Printf("  - %v\n", repository.Name)
+			}
 		}
 
 		return nil
@@ -90,7 +93,7 @@ func fetchRepositories(projectId uint64) error {
 	return nil
 }
 
-func readRepositories() ([]backlog.Repository, error) {
+func readRepositories(projectId uint64) ([]backlog.Repository, error) {
 	var repositories []backlog.Repository
 
 	base, err := cachePath(repositoriesCachePath)
@@ -112,6 +115,9 @@ func readRepositories() ([]backlog.Repository, error) {
 
 		if err := json.Unmarshal(data, &repository); err != nil {
 			return err
+		}
+		if repository.ProjectId != projectId {
+			return nil
 		}
 
 		repositories = append(repositories, repository)
