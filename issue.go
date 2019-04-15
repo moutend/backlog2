@@ -73,9 +73,26 @@ var issueShowCommand = &cobra.Command{
 			return err
 		}
 
+		if err := fetchProjects(); err != nil {
+			return err
+		}
+
+		projects, err := readProjects()
+		if err != nil {
+			return err
+		}
+
+		var project backlog.Project
+
+		for _, project = range projects {
+			if issue.ProjectId == project.Id {
+				break
+			}
+		}
 		{
 			fmt.Println("---")
 			fmt.Println("summary:", issue.Summary)
+			fmt.Println("project:", project.Name)
 			fmt.Println("parentissueid:", issue.ParentIssueId)
 			fmt.Println("issuetype:", issue.IssueType.Name)
 			fmt.Println("status:", issue.Status.Name)
