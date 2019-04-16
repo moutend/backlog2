@@ -11,16 +11,20 @@ const (
 	cacheDir = ".backlog"
 
 	projectsCachePath = iota
+	myselfCachePath
 	pullRequestsCachePath
 	prioritiesCachePath
 	repositoriesCachePath
 	statusesCachePath
 	issuesCachePath
 	issueCommentsCachePath
+	wikisCachePath
 )
 
 func cachePath(t int) (path string, err error) {
 	switch t {
+	case myselfCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "myself.json")
 	case projectsCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "projects")
 	case pullRequestsCachePath:
@@ -35,6 +39,8 @@ func cachePath(t int) (path string, err error) {
 		path = filepath.Join(cacheDir, "cache", space, "issues")
 	case issueCommentsCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "issue_comments")
+	case wikisCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "wikis")
 	default:
 		err = fmt.Errorf("unnown type")
 	}
@@ -44,6 +50,8 @@ func cachePath(t int) (path string, err error) {
 
 func lastExecutedPath(t int) (path string, err error) {
 	switch t {
+	case myselfCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "myself.time")
 	case projectsCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "project.time")
 	case prioritiesCachePath:
@@ -52,6 +60,8 @@ func lastExecutedPath(t int) (path string, err error) {
 		path = filepath.Join(cacheDir, "cache", space, "statuses.time")
 	case repositoriesCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "repository.time")
+	case wikisCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "wiki.time")
 	default:
 		err = fmt.Errorf("unknown type")
 	}
