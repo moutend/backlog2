@@ -97,11 +97,22 @@ var wikiShowCommand = &cobra.Command{
 			return err
 		}
 
+		if err := fetchProject(wiki.ProjectId); err != nil {
+			return err
+		}
+
+		project, err := readProject(wiki.ProjectId)
+		if err != nil {
+			return err
+		}
+
 		{
 			fmt.Println("---")
+			fmt.Println("project:", project.Name)
 			fmt.Printf("name: %s\n", wiki.Name)
 			fmt.Printf("created: %s\n", wiki.Created.Time().Format("2006-01-02"))
 			fmt.Printf("updated: %s\n", wiki.Updated.Time().Format("2006-01-02"))
+			fmt.Printf("url: https://%s.backlog.jp/wiki/%s/%s\n", space, project.ProjectKey, wiki.Name)
 			fmt.Println("---")
 			fmt.Println(wiki.Content)
 		}

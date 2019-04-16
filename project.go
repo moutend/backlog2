@@ -87,9 +87,7 @@ func fetchProjects() error {
 	return nil
 }
 
-func readProjects() ([]backlog.Project, error) {
-	var projects []backlog.Project
-
+func readProjects() (projects []backlog.Project, err error) {
 	base, err := cachePath(projectsCachePath)
 	if err != nil {
 		return nil, err
@@ -122,6 +120,47 @@ func readProjects() ([]backlog.Project, error) {
 	return projects, nil
 }
 
+func fetchProject(projectId uint64) error {
+	project, err := client.GetProject(projectId)
+	if err != nil {
+		return err
+	}
+
+	base, err := cachePath(projectsCachePath)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(project)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(base, fmt.Sprintf("%d.json", project.Id))
+	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func readProject(projectId uint64) (project backlog.Project, err error) {
+	base, err := cachePath(projectsCachePath)
+	if err != nil {
+		return project, err
+	}
+
+	path := filepath.Join(base, fmt.Sprintf("%d.json", projectId))
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return project, err
+	}
+	if err := json.Unmarshal(data, &project); err != nil {
+		return project, err
+	}
+
+	return project, nil
+}
 func init() {
 	projectCommand.AddCommand(projectListCommand)
 

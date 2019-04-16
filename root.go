@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	backlog "github.com/moutend/go-backlog"
@@ -42,7 +41,6 @@ var rootCommand = &cobra.Command{
 			}
 		}
 
-		fmt.Println("@@@", commands)
 		return nil
 	},
 }

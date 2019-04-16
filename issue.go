@@ -205,9 +205,7 @@ func fetchIssues(projectId uint64, query url.Values) error {
 	return nil
 }
 
-func readIssues(projectId uint64) ([]backlog.Issue, error) {
-	var issues []backlog.Issue
-
+func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
 	base, err := cachePath(issuesCachePath)
 	if err != nil {
 		return nil, err
@@ -306,27 +304,14 @@ func readIssueById(issueId uint64) (issue backlog.Issue, err error) {
 		return issue, err
 	}
 
-	err = filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
-		if !strings.HasSuffix(path, ".json") {
-			return nil
-		}
-
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-
-		var i backlog.Issue
-
-		if err := json.Unmarshal(data, &i); err != nil {
-			return err
-		}
-		if i.Id == issueId {
-			issue = i
-		}
-
-		return nil
-	})
+	path := filepath.Join(base, fmt.Sprintf("%d.json", issueId))
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return issue, err
+	}
+	if err := json.Unmarshal(data, &issue); err != nil {
+		return issue, err
+	}
 
 	return issue, nil
 }

@@ -102,9 +102,7 @@ func fetchRepositories(projectId uint64) error {
 	return nil
 }
 
-func readRepositories(projectId uint64) ([]backlog.Repository, error) {
-	var repositories []backlog.Repository
-
+func readRepositories(projectId uint64) (repositories []backlog.Repository, err error) {
 	base, err := cachePath(repositoriesCachePath)
 	if err != nil {
 		return nil, err
