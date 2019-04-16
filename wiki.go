@@ -97,11 +97,11 @@ var wikiShowCommand = &cobra.Command{
 			return err
 		}
 
-		if err := fetchProject(wiki.ProjectId); err != nil {
+		if err := fetchProjectById(wiki.ProjectId); err != nil {
 			return err
 		}
 
-		project, err := readProject(wiki.ProjectId)
+		project, err := readProjectById(wiki.ProjectId)
 		if err != nil {
 			return err
 		}

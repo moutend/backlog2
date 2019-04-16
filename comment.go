@@ -64,11 +64,11 @@ var commentShowCommand = &cobra.Command{
 				return err
 			}
 
-			if err := fetchIssueComments(issue.Id); err != nil {
+			if err := fetchCommentsByIssueId(issue.Id); err != nil {
 				return err
 			}
 
-			comments, err = readIssueComments(issue.Id)
+			comments, err = readCommentsByIssueId(issue.Id)
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ var commentShowCommand = &cobra.Command{
 	},
 }
 
-func fetchIssueComments(issueId uint64) error {
+func fetchCommentsByIssueId(issueId uint64) error {
 	comments, err := client.GetIssueComments(issueId, nil)
 	if err != nil {
 		return err
@@ -126,9 +126,7 @@ func fetchIssueComments(issueId uint64) error {
 	return nil
 }
 
-func readIssueComments(issueId uint64) ([]backlog.Comment, error) {
-	var comments []backlog.Comment
-
+func readCommentsByIssueId(issueId uint64) (comments []backlog.Comment, err error) {
 	base, err := cachePath(issueCommentsCachePath)
 	if err != nil {
 		return nil, err

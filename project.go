@@ -120,7 +120,7 @@ func readProjects() (projects []backlog.Project, err error) {
 	return projects, nil
 }
 
-func fetchProject(projectId uint64) error {
+func fetchProjectById(projectId uint64) error {
 	project, err := client.GetProject(projectId)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func fetchProject(projectId uint64) error {
 	return nil
 }
 
-func readProject(projectId uint64) (project backlog.Project, err error) {
+func readProjectById(projectId uint64) (project backlog.Project, err error) {
 	base, err := cachePath(projectsCachePath)
 	if err != nil {
 		return project, err
@@ -161,6 +161,7 @@ func readProject(projectId uint64) (project backlog.Project, err error) {
 
 	return project, nil
 }
+
 func init() {
 	projectCommand.AddCommand(projectListCommand)
 
