@@ -12,7 +12,9 @@ const (
 
 	projectsCachePath = iota
 	pullRequestsCachePath
+	prioritiesCachePath
 	repositoriesCachePath
+	statusesCachePath
 	issuesCachePath
 	issueCommentsCachePath
 )
@@ -23,8 +25,12 @@ func cachePath(t int) (path string, err error) {
 		path = filepath.Join(cacheDir, "cache", space, "projects")
 	case pullRequestsCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "pullrequests")
+	case prioritiesCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "priorities.json")
 	case repositoriesCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "repositories")
+	case statusesCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "statuses.json")
 	case issuesCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "issues")
 	case issueCommentsCachePath:
@@ -40,6 +46,10 @@ func lastExecutedPath(t int) (path string, err error) {
 	switch t {
 	case projectsCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "project.time")
+	case prioritiesCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "priorities.time")
+	case statusesCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "statuses.time")
 	case repositoriesCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "repository.time")
 	default:

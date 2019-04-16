@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
@@ -155,8 +156,16 @@ var issueShowCommand = &cobra.Command{
 			fmt.Println("priority:", issue.Priority.Name)
 			fmt.Println("assignee:", issue.Assignee.Name)
 			fmt.Println("created:", issue.CreatedUser.Name)
-			fmt.Println("start:", issue.StartDate.Time().Format("2006-01-02"))
-			fmt.Println("due:", issue.DueDate.Time().Format("2006-01-02"))
+			if issue.StartDate.Time().Equal(time.Time{}) {
+				fmt.Println("start: ")
+			} else {
+				fmt.Println("start:", issue.StartDate.Time().Format("2006-01-02"))
+			}
+			if issue.DueDate.Time().Equal(time.Time{}) {
+				fmt.Println("due: ")
+			} else {
+				fmt.Println("due:", issue.DueDate.Time().Format("2006-01-02"))
+			}
 			fmt.Println("estimated:", issue.EstimatedHours)
 			fmt.Println("actual:", issue.ActualHours)
 			fmt.Printf("url: https://%s.backlog.jp/view/%s\n", space, issue.IssueKey)
