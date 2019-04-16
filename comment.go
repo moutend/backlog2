@@ -55,11 +55,11 @@ var commentShowCommand = &cobra.Command{
 
 		switch len(args) {
 		case 1: // issue
-			if err := fetchIssue(args[0]); err != nil {
+			if err := fetchIssueByIssueKey(args[0]); err != nil {
 				return err
 			}
 
-			issue, err := readIssue(args[0])
+			issue, err := readIssueByIssueKey(args[0])
 			if err != nil {
 				return err
 			}

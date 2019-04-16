@@ -7,12 +7,17 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
+	"sort"
 	"strings"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
 )
+
+type ProjectIssues struct {
+	Project backlog.Project
+	Issues  []backlog.Issue
+}
 
 var issueCommand = &cobra.Command{
 	Use: "issue",
@@ -38,17 +43,46 @@ var issueListCommand = &cobra.Command{
 		if err := issueCommand.RunE(c, args); err != nil {
 			return err
 		}
-		if err := fetchIssues(); err != nil {
+
+		if err := fetchProjects(); err != nil {
 			return err
 		}
 
-		issues, err := readIssues()
+		projects, err := readProjects()
 		if err != nil {
 			return err
 		}
 
-		for _, issue := range issues {
-			fmt.Printf("  - [%v %v] %v by @%v (id:%v) %v\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.IssueKey, issue.StartDate)
+		pis := make([]ProjectIssues, len(projects))
+		query := url.Values{}
+		query.Add("sort", "updated")
+		query.Add("order", "desc")
+
+		for _, project := range projects {
+			if err := fetchIssues(project.Id, query); err != nil {
+				return err
+			}
+
+			issues, err := readIssues(project.Id)
+			if err != nil {
+				return err
+			}
+
+			sort.Slice(issues, func(i, j int) bool {
+				return issues[i].Id > issues[j].Id
+			})
+			pis = append(pis, ProjectIssues{
+				Project: project,
+				Issues:  issues,
+			})
+		}
+
+		for _, pi := range pis {
+			fmt.Printf("- [%s] %s\n", pi.Project.ProjectKey, pi.Project.Name)
+
+			for _, issue := range pi.Issues {
+				fmt.Printf("  - [%v %v] %v by @%v (id:%v) %v\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.IssueKey, issue.StartDate)
+			}
 		}
 
 		return nil
@@ -64,11 +98,11 @@ var issueShowCommand = &cobra.Command{
 		if len(args) < 1 {
 			return nil
 		}
-		if err := fetchIssue(args[0]); err != nil {
+		if err := fetchIssueByIssueKey(args[0]); err != nil {
 			return err
 		}
 
-		issue, err := readIssue(args[0])
+		issue, err := readIssueByIssueKey(args[0])
 		if err != nil {
 			return err
 		}
@@ -89,11 +123,27 @@ var issueShowCommand = &cobra.Command{
 				break
 			}
 		}
+
+		var parentIssue backlog.Issue
+
+		if issue.ParentIssueId != 0 {
+			if err := fetchIssueById(issue.ParentIssueId); err != nil {
+				return err
+			}
+
+			parentIssue, err = readIssueById(issue.ParentIssueId)
+			if err != nil {
+				return err
+			}
+		}
+
 		{
 			fmt.Println("---")
 			fmt.Println("summary:", issue.Summary)
 			fmt.Println("project:", project.Name)
-			fmt.Println("parentissueid:", issue.ParentIssueId)
+			if issue.ParentIssueId != 0 {
+				fmt.Println("parent:", parentIssue.IssueKey)
+			}
 			fmt.Println("issuetype:", issue.IssueType.Name)
 			fmt.Println("status:", issue.Status.Name)
 			fmt.Println("priority:", issue.Priority.Name)
@@ -111,29 +161,13 @@ var issueShowCommand = &cobra.Command{
 	},
 }
 
-func fetchIssues() error {
-	if err := fetchProjects(); err != nil {
-		return err
-	}
+func fetchIssues(projectId uint64, query url.Values) error {
+	query.Set("count", "100")
+	query.Set("projectId[]", fmt.Sprintf("%d", projectId))
 
-	projects, err := readProjects()
+	issues, err := client.GetIssues(query)
 	if err != nil {
 		return err
-	}
-
-	var issues []backlog.Issue
-
-	for _, project := range projects {
-		query := url.Values{}
-		query.Add("projectId[]", fmt.Sprintf("%d", project.Id))
-		query.Add("count", "100")
-
-		i, err := client.GetIssues(query)
-		if err != nil {
-			return err
-		}
-
-		issues = append(issues, i...)
 	}
 
 	base, err := cachePath(issuesCachePath)
@@ -156,7 +190,7 @@ func fetchIssues() error {
 	return nil
 }
 
-func readIssues() ([]backlog.Issue, error) {
+func readIssues(projectId uint64) ([]backlog.Issue, error) {
 	var issues []backlog.Issue
 
 	base, err := cachePath(issuesCachePath)
@@ -179,8 +213,9 @@ func readIssues() ([]backlog.Issue, error) {
 		if err := json.Unmarshal(data, &issue); err != nil {
 			return err
 		}
-
-		issues = append(issues, issue)
+		if issue.ProjectId == projectId {
+			issues = append(issues, issue)
+		}
 
 		return nil
 	})
@@ -191,8 +226,8 @@ func readIssues() ([]backlog.Issue, error) {
 	return issues, nil
 }
 
-func fetchIssue(key string) error {
-	issue, err := client.GetIssue(key)
+func fetchIssueByIssueKey(issueKey string) error {
+	issue, err := client.GetIssue(issueKey)
 	if err != nil {
 		return err
 	}
@@ -215,42 +250,70 @@ func fetchIssue(key string) error {
 	return nil
 }
 
-func readIssue(key string) (issue backlog.Issue, err error) {
-	issueId, err := strconv.Atoi(key)
-	if err != nil {
-		return readIssueByKey(key)
-	}
+func fetchIssueById(issueId uint64) error {
+	return fetchIssueByIssueKey(fmt.Sprint(issueId))
+}
 
+func readIssueByIssueKey(issueKey string) (issue backlog.Issue, err error) {
 	base, err := cachePath(issuesCachePath)
 	if err != nil {
 		return issue, err
 	}
 
-	path := filepath.Join(base, fmt.Sprintf("%d.json", issueId))
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return issue, err
-	}
+	err = filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".json") {
+			return nil
+		}
 
-	if err := json.Unmarshal(data, &issue); err != nil {
-		return issue, err
-	}
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		var i backlog.Issue
+
+		if err := json.Unmarshal(data, &i); err != nil {
+			return err
+		}
+		if i.IssueKey == issueKey {
+			issue = i
+		}
+
+		return nil
+	})
 
 	return issue, nil
 }
 
-func readIssueByKey(key string) (issue backlog.Issue, err error) {
-	issues, err := readIssues()
+func readIssueById(issueId uint64) (issue backlog.Issue, err error) {
+	base, err := cachePath(issuesCachePath)
 	if err != nil {
 		return issue, err
 	}
-	for _, issue := range issues {
-		if issue.IssueKey == key {
-			return issue, nil
-		}
-	}
 
-	return issue, fmt.Errorf("%s not found", key)
+	err = filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".json") {
+			return nil
+		}
+
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		var i backlog.Issue
+
+		if err := json.Unmarshal(data, &i); err != nil {
+			return err
+		}
+		if i.Id == issueId {
+			issue = i
+		}
+
+		return nil
+	})
+
+	return issue, nil
 }
 
 func init() {
