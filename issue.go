@@ -58,7 +58,7 @@ var issueListCommand = &cobra.Command{
 		query.Add("sort", "updated")
 		query.Add("order", "desc")
 
-		for _, project := range projects {
+		for i, project := range projects {
 			if err := fetchIssues(project.Id, query); err != nil {
 				return err
 			}
@@ -71,17 +71,23 @@ var issueListCommand = &cobra.Command{
 			sort.Slice(issues, func(i, j int) bool {
 				return issues[i].Id > issues[j].Id
 			})
-			pis = append(pis, ProjectIssues{
+			pis[i] = ProjectIssues{
 				Project: project,
 				Issues:  issues,
-			})
+			}
 		}
 
 		for _, pi := range pis {
 			fmt.Printf("- [%s] %s\n", pi.Project.ProjectKey, pi.Project.Name)
 
 			for _, issue := range pi.Issues {
-				fmt.Printf("  - [%v %v] %v by @%v (id:%v) %v\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.IssueKey, issue.StartDate)
+				fmt.Printf(
+					"  - [%s] (%s) %s (by %s)\n",
+					issue.IssueKey,
+					issue.Status.Name,
+					issue.Summary,
+					issue.CreatedUser.Name,
+				)
 			}
 		}
 
