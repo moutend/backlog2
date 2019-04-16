@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	backlog "github.com/moutend/go-backlog"
@@ -26,7 +27,9 @@ var rootCommand = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
+		if debug {
+			client.SetLogger(log.New(os.Stdout, "Debug: ", 0))
+		}
 		return nil
 	},
 	PersistentPostRunE: func(c *cobra.Command, args []string) error {

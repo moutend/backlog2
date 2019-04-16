@@ -17,6 +17,7 @@ const (
 	repositoriesCachePath
 	statusesCachePath
 	issuesCachePath
+	issueTypesCachePath
 	issueCommentsCachePath
 	wikisCachePath
 )
@@ -37,6 +38,8 @@ func cachePath(t int) (path string, err error) {
 		path = filepath.Join(cacheDir, "cache", space, "statuses.json")
 	case issuesCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "issues")
+	case issueTypesCachePath:
+		path = filepath.Join(cacheDir, "cache", space, "issuetypes")
 	case issueCommentsCachePath:
 		path = filepath.Join(cacheDir, "cache", space, "issue_comments")
 	case wikisCachePath:

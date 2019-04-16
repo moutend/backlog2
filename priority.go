@@ -37,7 +37,7 @@ func fetchPriorities() error {
 	return nil
 }
 
-func readPriorities() (priorities []backlog.Status, err error) {
+func readPriorities() (priorities []backlog.Priority, err error) {
 	path, err := cachePath(prioritiesCachePath)
 	if err != nil {
 		return nil, err

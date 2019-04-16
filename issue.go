@@ -147,11 +147,11 @@ var issueShowCommand = &cobra.Command{
 		{
 			fmt.Println("---")
 			fmt.Println("summary:", issue.Summary)
-			fmt.Println("project:", project.Name)
+			fmt.Println("project:", project.ProjectKey)
 			if issue.ParentIssueId != 0 {
 				fmt.Println("parent:", parentIssue.IssueKey)
 			}
-			fmt.Println("issuetype:", issue.IssueType.Name)
+			fmt.Println("type:", issue.IssueType.Name)
 			fmt.Println("status:", issue.Status.Name)
 			fmt.Println("priority:", issue.Priority.Name)
 			fmt.Println("assignee:", issue.Assignee.Name)
@@ -171,6 +171,38 @@ var issueShowCommand = &cobra.Command{
 			fmt.Printf("url: https://%s.backlog.jp/view/%s\n", space, issue.IssueKey)
 			fmt.Println("---")
 			fmt.Printf("%s", issue.Description)
+		}
+		return nil
+	},
+}
+
+var issueUpdateCommand = &cobra.Command{
+	Use: "update",
+	RunE: func(c *cobra.Command, args []string) error {
+		if err := issueCommand.RunE(c, args); err != nil {
+			return err
+		}
+		if len(args) < 2 {
+			return nil
+		}
+
+		issueKey := args[0]
+		filePath := args[1]
+
+		v, err := parseIssueMarkdown(issueKey, filePath)
+		if err != nil {
+			return err
+		}
+		fmt.Println(v)
+		return nil
+	},
+}
+
+var issueCreateCommand = &cobra.Command{
+	Use: "create",
+	RunE: func(c *cobra.Command, args []string) error {
+		if err := issueCommand.RunE(c, args); err != nil {
+			return err
 		}
 		return nil
 	},
@@ -319,6 +351,8 @@ func readIssueById(issueId uint64) (issue backlog.Issue, err error) {
 func init() {
 	issueCommand.AddCommand(issueListCommand)
 	issueCommand.AddCommand(issueShowCommand)
+	issueCommand.AddCommand(issueUpdateCommand)
+	issueCommand.AddCommand(issueCreateCommand)
 
 	rootCommand.AddCommand(issueCommand)
 }

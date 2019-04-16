@@ -87,6 +87,34 @@ func fetchProjects() error {
 	return nil
 }
 
+func fetchProjectByProjectKey(projectKey string) error {
+	project, err := client.GetProject(projectKey)
+	if err != nil {
+		return err
+	}
+
+	base, err := cachePath(projectsCachePath)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(project)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(base, fmt.Sprintf("%d.json", project.Id))
+	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fetchProjectById(projectId uint64) error {
+	return fetchProjectByProjectKey(fmt.Sprint(projectId))
+}
+
 func readProjects() (projects []backlog.Project, err error) {
 	base, err := cachePath(projectsCachePath)
 	if err != nil {
@@ -120,30 +148,6 @@ func readProjects() (projects []backlog.Project, err error) {
 	return projects, nil
 }
 
-func fetchProjectById(projectId uint64) error {
-	project, err := client.GetProject(projectId)
-	if err != nil {
-		return err
-	}
-
-	base, err := cachePath(projectsCachePath)
-	if err != nil {
-		return err
-	}
-
-	data, err := json.Marshal(project)
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(base, fmt.Sprintf("%d.json", project.Id))
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func readProjectById(projectId uint64) (project backlog.Project, err error) {
 	base, err := cachePath(projectsCachePath)
 	if err != nil {
@@ -156,6 +160,40 @@ func readProjectById(projectId uint64) (project backlog.Project, err error) {
 		return project, err
 	}
 	if err := json.Unmarshal(data, &project); err != nil {
+		return project, err
+	}
+
+	return project, nil
+}
+
+func readProjectByProjectKey(projectKey string) (project backlog.Project, err error) {
+	base, err := cachePath(projectsCachePath)
+	if err != nil {
+		return project, err
+	}
+
+	err = filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".json") {
+			return nil
+		}
+
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		var p backlog.Project
+
+		if err := json.Unmarshal(data, &p); err != nil {
+			return err
+		}
+		if p.ProjectKey == projectKey {
+			project = p
+		}
+
+		return nil
+	})
+	if err != nil {
 		return project, err
 	}
 
