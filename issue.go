@@ -218,6 +218,10 @@ func fetchIssues(projectId uint64, query url.Values) error {
 	query.Set("count", "100")
 	query.Set("projectId[]", fmt.Sprintf("%d", projectId))
 
+	if time.Now().Sub(lastExecuted(IssuesCache, query)) < 5*time.Minute {
+		return nil
+	}
+
 	issues, err := client.GetIssues(query)
 	if err != nil {
 		return err
@@ -241,8 +245,41 @@ func fetchIssues(projectId uint64, query url.Values) error {
 			return err
 		}
 	}
+	if err := setLastExecuted(IssuesCache, query); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func fetchIssueByIssueKey(issueKey string) error {
+	issue, err := client.GetIssue(issueKey)
+	if err != nil {
+		return err
+	}
+
+	base, err := cachePath(IssuesCache)
+	if err != nil {
+		return err
+	}
+
+	os.MkdirAll(base, 0755)
+
+	data, err := json.Marshal(issue)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(base, fmt.Sprintf("%d.json", issue.Id))
+	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func fetchIssueById(issueId uint64) error {
+	return fetchIssueByIssueKey(fmt.Sprint(issueId))
 }
 
 func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
@@ -277,36 +314,6 @@ func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
 	}
 
 	return issues, nil
-}
-
-func fetchIssueByIssueKey(issueKey string) error {
-	issue, err := client.GetIssue(issueKey)
-	if err != nil {
-		return err
-	}
-
-	base, err := cachePath(IssuesCache)
-	if err != nil {
-		return err
-	}
-
-	os.MkdirAll(base, 0755)
-
-	data, err := json.Marshal(issue)
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(base, fmt.Sprintf("%d.json", issue.Id))
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func fetchIssueById(issueId uint64) error {
-	return fetchIssueByIssueKey(fmt.Sprint(issueId))
 }
 
 func readIssueByIssueKey(issueKey string) (issue backlog.Issue, err error) {
