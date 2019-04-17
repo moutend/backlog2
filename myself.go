@@ -9,7 +9,7 @@ import (
 )
 
 func fetchMyself() error {
-	if time.Now().Sub(lastExecuted(myselfCachePath)) < 365*24*time.Hour {
+	if time.Now().Sub(lastExecuted(myselfCachePath, nil)) < 365*24*time.Hour {
 		return nil
 	}
 
@@ -30,7 +30,7 @@ func fetchMyself() error {
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(myselfCachePath); err != nil {
+	if err := setLastExecuted(myselfCachePath, nil); err != nil {
 		return err
 	}
 

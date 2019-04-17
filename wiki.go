@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
@@ -130,6 +131,10 @@ var wikiShowCommand = &cobra.Command{
 }
 
 func fetchWikis(query url.Values) error {
+	if time.Now().Sub(lastExecuted(wikisCachePath, query)) < 30*time.Minute {
+		return nil
+	}
+
 	wikis, err := client.GetWikis(query)
 	if err != nil {
 		return err
@@ -150,6 +155,9 @@ func fetchWikis(query url.Values) error {
 		if err := ioutil.WriteFile(path, data, 0644); err != nil {
 			return err
 		}
+	}
+	if err := setLastExecuted(wikisCachePath, query); err != nil {
+		return err
 	}
 
 	return nil

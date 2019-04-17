@@ -9,7 +9,7 @@ import (
 )
 
 func fetchStatuses() error {
-	if time.Now().Sub(lastExecuted(statusesCachePath)) < 365*24*time.Hour {
+	if time.Now().Sub(lastExecuted(statusesCachePath, nil)) < 365*24*time.Hour {
 		return nil
 	}
 	statuses, err := client.GetStatuses()
@@ -29,7 +29,7 @@ func fetchStatuses() error {
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(statusesCachePath); err != nil {
+	if err := setLastExecuted(statusesCachePath, nil); err != nil {
 		return err
 	}
 

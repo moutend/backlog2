@@ -9,7 +9,7 @@ import (
 )
 
 func fetchPriorities() error {
-	if time.Now().Sub(lastExecuted(prioritiesCachePath)) < 365*24*time.Hour {
+	if time.Now().Sub(lastExecuted(prioritiesCachePath, nil)) < 365*24*time.Hour {
 		return nil
 	}
 
@@ -30,7 +30,7 @@ func fetchPriorities() error {
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(prioritiesCachePath); err != nil {
+	if err := setLastExecuted(prioritiesCachePath, nil); err != nil {
 		return err
 	}
 

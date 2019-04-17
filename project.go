@@ -48,7 +48,7 @@ var projectListCommand = &cobra.Command{
 }
 
 func fetchProjects() error {
-	if time.Now().Sub(lastExecuted(projectsCachePath)) < 24*time.Hour {
+	if time.Now().Sub(lastExecuted(projectsCachePath, nil)) < 24*time.Hour {
 		return nil
 	}
 
@@ -75,7 +75,7 @@ func fetchProjects() error {
 			return err
 		}
 	}
-	if err := setLastExecuted(projectsCachePath); err != nil {
+	if err := setLastExecuted(projectsCachePath, nil); err != nil {
 		return err
 	}
 

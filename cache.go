@@ -1,9 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -51,29 +56,34 @@ func cachePath(t int) (path string, err error) {
 	return path, err
 }
 
-func lastExecutedPath(t int) (path string, err error) {
+func lastExecutedPath(t int, query url.Values) (path string, err error) {
 	switch t {
 	case myselfCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "myself.time")
+		path = filepath.Join(cacheDir, "cache", space, "myself")
 	case projectsCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "project.time")
+		path = filepath.Join(cacheDir, "cache", space, "projects")
 	case prioritiesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "priorities.time")
+		path = filepath.Join(cacheDir, "cache", space, "priorities")
 	case statusesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "statuses.time")
+		path = filepath.Join(cacheDir, "cache", space, "statuses")
 	case repositoriesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "repository.time")
+		path = filepath.Join(cacheDir, "cache", space, "repositories")
 	case wikisCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "wiki.time")
+		path = filepath.Join(cacheDir, "cache", space, "wikis")
 	default:
 		err = fmt.Errorf("unknown type")
+	}
+	if hash := hashQuery(query); hash == "" {
+		path = fmt.Sprintf("%s.time", path)
+	} else {
+		path = fmt.Sprintf("%s.%s.time", path, hash)
 	}
 
 	return path, err
 }
 
-func lastExecuted(t int) time.Time {
-	path, err := lastExecutedPath(t)
+func lastExecuted(t int, query url.Values) time.Time {
+	path, err := lastExecutedPath(t, query)
 	if err != nil {
 		return time.Time{}
 	}
@@ -88,8 +98,8 @@ func lastExecuted(t int) time.Time {
 	return v
 }
 
-func setLastExecuted(t int) error {
-	path, err := lastExecutedPath(t)
+func setLastExecuted(t int, query url.Values) error {
+	path, err := lastExecutedPath(t, query)
 	if err != nil {
 		return err
 	}
@@ -100,4 +110,24 @@ func setLastExecuted(t int) error {
 	}
 
 	return nil
+}
+
+func hashQuery(query url.Values) string {
+	if query == nil {
+		return ""
+	}
+
+	ss := []string{}
+
+	for k, v := range query {
+		ss = append(ss, fmt.Sprintf("%s:%s", k, v))
+	}
+
+	sort.Strings(ss)
+
+	s := strings.Join(ss, ",")
+
+	b := sha256.Sum256([]byte(s))
+
+	return hex.EncodeToString(b[:])
 }
