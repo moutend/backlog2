@@ -57,7 +57,7 @@ var wikiListCommand = &cobra.Command{
 				return err
 			}
 
-			wikis, err := readWikis()
+			wikis, err := readWikis(project.Id)
 			if err != nil {
 				return err
 			}
@@ -163,7 +163,38 @@ func fetchWikis(query url.Values) error {
 	return nil
 }
 
-func readWikis() (wikis []backlog.Wiki, err error) {
+func fetchWiki(wikiId uint64) error {
+	if time.Now().Sub(lastExecuted(wikiCachePath, nil)) < 30*time.Minute {
+		return nil
+	}
+
+	wiki, err := client.GetWiki(wikiId)
+	if err != nil {
+		return err
+	}
+
+	base, err := cachePath(wikisCachePath)
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(wiki)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(base, fmt.Sprintf("%d.json", wiki.Id))
+	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+	if err := setLastExecuted(wikiCachePath, nil); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func readWikis(projectId uint64) (wikis []backlog.Wiki, err error) {
 	base, err := cachePath(wikisCachePath)
 	if err != nil {
 		return nil, err
@@ -184,8 +215,9 @@ func readWikis() (wikis []backlog.Wiki, err error) {
 		if err := json.Unmarshal(data, &wiki); err != nil {
 			return err
 		}
-
-		wikis = append(wikis, wiki)
+		if wiki.ProjectId == projectId {
+			wikis = append(wikis, wiki)
+		}
 
 		return nil
 	})
@@ -194,30 +226,6 @@ func readWikis() (wikis []backlog.Wiki, err error) {
 	}
 
 	return wikis, nil
-}
-
-func fetchWiki(wikiId uint64) error {
-	wiki, err := client.GetWiki(wikiId)
-	if err != nil {
-		return err
-	}
-
-	base, err := cachePath(wikisCachePath)
-	if err != nil {
-		return err
-	}
-
-	data, err := json.Marshal(wiki)
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(base, fmt.Sprintf("%d.json", wiki.Id))
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func readWiki(wikiId uint64) (wiki backlog.Wiki, err error) {

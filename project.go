@@ -83,6 +83,10 @@ func fetchProjects() error {
 }
 
 func fetchProjectByProjectKey(projectKey string) error {
+	if time.Now().Sub(lastExecuted(projectCachePath, nil)) < 24*time.Hour {
+		return nil
+	}
+
 	project, err := client.GetProject(projectKey)
 	if err != nil {
 		return err
@@ -102,6 +106,9 @@ func fetchProjectByProjectKey(projectKey string) error {
 
 	path := filepath.Join(base, fmt.Sprintf("%d.json", project.Id))
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		return err
+	}
+	if err := setLastExecuted(projectCachePath, nil); err != nil {
 		return err
 	}
 
