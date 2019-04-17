@@ -20,13 +20,6 @@ var projectCommand = &cobra.Command{
 			return err
 		}
 
-		path, err := cachePath(projectsCachePath)
-		if err != nil {
-			return err
-		}
-
-		os.MkdirAll(path, 0755)
-
 		return nil
 	},
 }
@@ -69,6 +62,8 @@ func fetchProjects() error {
 		return err
 	}
 
+	os.MkdirAll(base, 0755)
+
 	for _, project := range projects {
 		data, err := json.Marshal(project)
 		if err != nil {
@@ -97,6 +92,8 @@ func fetchProjectByProjectKey(projectKey string) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	data, err := json.Marshal(project)
 	if err != nil {

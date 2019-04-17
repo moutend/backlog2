@@ -30,13 +30,6 @@ var commentCommand = &cobra.Command{
 			return err
 		}
 
-		path, err := cachePath(issueCommentsCachePath)
-		if err != nil {
-			return err
-		}
-
-		os.MkdirAll(path, 0755)
-
 		return nil
 	},
 }
@@ -106,6 +99,8 @@ func fetchCommentsByIssueId(issueId uint64) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	for _, comment := range comments {
 		c := IssueComment{

@@ -36,6 +36,7 @@ func parseIssueMarkdown(issueKey, path string) (url.Values, error) {
 	}
 
 	var (
+		myself      backlog.User
 		project     backlog.Project
 		issue       backlog.Issue
 		parentIssue backlog.Issue
@@ -43,6 +44,15 @@ func parseIssueMarkdown(issueKey, path string) (url.Values, error) {
 		priority    backlog.Priority
 		status      backlog.Status
 	)
+
+	if err := fetchMyself(); err != nil {
+		return nil, err
+	}
+
+	myself, err = readMyself()
+	if err != nil {
+		return nil, err
+	}
 
 	if err := fetchProjectByProjectKey(fo.Project); err != nil {
 		return nil, err
@@ -124,6 +134,9 @@ func parseIssueMarkdown(issueKey, path string) (url.Values, error) {
 
 	if issue.Id != 0 {
 		values.Add("assigneeId", fmt.Sprint(issue.Assignee.Id))
+	}
+	if issueKey == "" {
+		values.Add("assigneeId", fmt.Sprint(myself.Id))
 	}
 	if parentIssue.Id != 0 {
 		values.Add("parentIssueId", fmt.Sprint(parentIssue.Id))

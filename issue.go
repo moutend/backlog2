@@ -27,13 +27,6 @@ var issueCommand = &cobra.Command{
 			return err
 		}
 
-		path, err := cachePath(issuesCachePath)
-		if err != nil {
-			return err
-		}
-
-		os.MkdirAll(path, 0755)
-
 		return nil
 	},
 }
@@ -204,6 +197,19 @@ var issueCreateCommand = &cobra.Command{
 		if err := issueCommand.RunE(c, args); err != nil {
 			return err
 		}
+		if len(args) < 1 {
+			return nil
+		}
+
+		filePath := args[0]
+
+		v, err := parseIssueMarkdown("", filePath)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(v)
+
 		return nil
 	},
 }
@@ -221,6 +227,8 @@ func fetchIssues(projectId uint64, query url.Values) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	for _, issue := range issues {
 		data, err := json.Marshal(issue)
@@ -281,6 +289,8 @@ func fetchIssueByIssueKey(issueKey string) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	data, err := json.Marshal(issue)
 	if err != nil {

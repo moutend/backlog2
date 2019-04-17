@@ -19,13 +19,6 @@ var pullRequestCommand = &cobra.Command{
 			return err
 		}
 
-		path, err := cachePath(pullRequestsCachePath)
-		if err != nil {
-			return err
-		}
-
-		os.MkdirAll(path, 0755)
-
 		return nil
 	},
 }
@@ -88,6 +81,8 @@ func fetchPullRequests(projectId, repositoryId uint64) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	for _, pr := range prs {
 		data, err := json.Marshal(pr)

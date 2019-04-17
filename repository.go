@@ -20,13 +20,6 @@ var repositoryCommand = &cobra.Command{
 			return err
 		}
 
-		path, err := cachePath(repositoriesCachePath)
-		if err != nil {
-			return err
-		}
-
-		os.MkdirAll(path, 0755)
-
 		return nil
 	},
 }
@@ -82,6 +75,8 @@ func fetchRepositories(projectId uint64) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	for _, repository := range repositories {
 		data, err := json.Marshal(repository)

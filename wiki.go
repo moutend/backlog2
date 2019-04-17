@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
@@ -50,11 +50,13 @@ var wikiListCommand = &cobra.Command{
 		}
 
 		for _, project := range projects {
-			if err := fetchWikis(project.Id); err != nil {
+			query := url.Values{}
+			query.Add("projectIdOrKey", fmt.Sprint(project.Id))
+			if err := fetchWikis(query); err != nil {
 				return err
 			}
 
-			wikis, err := readWikis(project.Id)
+			wikis, err := readWikis()
 			if err != nil {
 				return err
 			}
@@ -108,11 +110,17 @@ var wikiShowCommand = &cobra.Command{
 
 		{
 			fmt.Println("---")
-			fmt.Println("project:", project.Name)
+			fmt.Println("project:", project.ProjectKey)
 			fmt.Printf("name: %s\n", wiki.Name)
 			fmt.Printf("created: %s\n", wiki.Created.Time().Format("2006-01-02"))
 			fmt.Printf("updated: %s\n", wiki.Updated.Time().Format("2006-01-02"))
-			fmt.Printf("url: https://%s.backlog.jp/wiki/%s/%s\n", space, project.ProjectKey, wiki.Name)
+
+			u, err := url.Parse(fmt.Sprintf("https://%s.backlog.jp/wiki/%s/%s", space, project.ProjectKey, wiki.Name))
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("url:", u)
 			fmt.Println("---")
 			fmt.Println(wiki.Content)
 		}
@@ -121,12 +129,8 @@ var wikiShowCommand = &cobra.Command{
 	},
 }
 
-func fetchWikis(projectId uint64) error {
-	if time.Now().Sub(lastExecuted(wikisCachePath)) < 24*time.Hour {
-		return nil
-	}
-
-	wikis, err := client.GetWikis(fmt.Sprint(projectId), nil)
+func fetchWikis(query url.Values) error {
+	wikis, err := client.GetWikis(query)
 	if err != nil {
 		return err
 	}
@@ -148,14 +152,10 @@ func fetchWikis(projectId uint64) error {
 		}
 	}
 
-	if err := setLastExecuted(wikisCachePath); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func readWikis(projectId uint64) (wikis []backlog.Wiki, err error) {
+func readWikis() (wikis []backlog.Wiki, err error) {
 	base, err := cachePath(wikisCachePath)
 	if err != nil {
 		return nil, err
@@ -176,9 +176,8 @@ func readWikis(projectId uint64) (wikis []backlog.Wiki, err error) {
 		if err := json.Unmarshal(data, &wiki); err != nil {
 			return err
 		}
-		if wiki.ProjectId == projectId {
-			wikis = append(wikis, wiki)
-		}
+
+		wikis = append(wikis, wiki)
 
 		return nil
 	})
