@@ -17,7 +17,7 @@ func fetchIssueTypes(projectId uint64) error {
 		return err
 	}
 
-	base, err := cachePath(issueTypesCachePath)
+	base, err := cachePath(IssueTypesCache)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func fetchIssueTypes(projectId uint64) error {
 }
 
 func readIssueTypes(projectId uint64) (issueTypes []backlog.IssueType, err error) {
-	base, err := cachePath(issueTypesCachePath)
+	base, err := cachePath(IssueTypesCache)
 	if err != nil {
 		return nil, err
 	}

@@ -62,7 +62,7 @@ var repositoryListCommand = &cobra.Command{
 }
 
 func fetchRepositories(projectId uint64) error {
-	if time.Now().Sub(lastExecuted(repositoriesCachePath, nil)) < 24*time.Hour {
+	if time.Now().Sub(lastExecuted(RepositoriesCache, nil)) < 24*time.Hour {
 		return nil
 	}
 
@@ -71,7 +71,7 @@ func fetchRepositories(projectId uint64) error {
 		return err
 	}
 
-	base, err := cachePath(repositoriesCachePath)
+	base, err := cachePath(RepositoriesCache)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func fetchRepositories(projectId uint64) error {
 		}
 	}
 
-	if err := setLastExecuted(repositoriesCachePath, nil); err != nil {
+	if err := setLastExecuted(RepositoriesCache, nil); err != nil {
 		return err
 	}
 
@@ -98,7 +98,7 @@ func fetchRepositories(projectId uint64) error {
 }
 
 func readRepositories(projectId uint64) (repositories []backlog.Repository, err error) {
-	base, err := cachePath(repositoriesCachePath)
+	base, err := cachePath(RepositoriesCache)
 	if err != nil {
 		return nil, err
 	}

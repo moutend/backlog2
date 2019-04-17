@@ -223,7 +223,7 @@ func fetchIssues(projectId uint64, query url.Values) error {
 		return err
 	}
 
-	base, err := cachePath(issuesCachePath)
+	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func fetchIssues(projectId uint64, query url.Values) error {
 }
 
 func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
-	base, err := cachePath(issuesCachePath)
+	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func fetchIssueByIssueKey(issueKey string) error {
 		return err
 	}
 
-	base, err := cachePath(issuesCachePath)
+	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func fetchIssueById(issueId uint64) error {
 }
 
 func readIssueByIssueKey(issueKey string) (issue backlog.Issue, err error) {
-	base, err := cachePath(issuesCachePath)
+	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return issue, err
 	}
@@ -341,7 +341,7 @@ func readIssueByIssueKey(issueKey string) (issue backlog.Issue, err error) {
 }
 
 func readIssueById(issueId uint64) (issue backlog.Issue, err error) {
-	base, err := cachePath(issuesCachePath)
+	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return issue, err
 	}

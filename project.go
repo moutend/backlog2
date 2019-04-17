@@ -48,7 +48,7 @@ var projectListCommand = &cobra.Command{
 }
 
 func fetchProjects() error {
-	if time.Now().Sub(lastExecuted(projectsCachePath, nil)) < 24*time.Hour {
+	if time.Now().Sub(lastExecuted(ProjectsCache, nil)) < 24*time.Hour {
 		return nil
 	}
 
@@ -57,7 +57,7 @@ func fetchProjects() error {
 		return err
 	}
 
-	base, err := cachePath(projectsCachePath)
+	base, err := cachePath(ProjectsCache)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func fetchProjects() error {
 			return err
 		}
 	}
-	if err := setLastExecuted(projectsCachePath, nil); err != nil {
+	if err := setLastExecuted(ProjectsCache, nil); err != nil {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func fetchProjects() error {
 }
 
 func fetchProjectByProjectKey(projectKey string) error {
-	if time.Now().Sub(lastExecuted(projectCachePath, nil)) < 24*time.Hour {
+	if time.Now().Sub(lastExecuted(ProjectCache, nil)) < 24*time.Hour {
 		return nil
 	}
 
@@ -92,7 +92,7 @@ func fetchProjectByProjectKey(projectKey string) error {
 		return err
 	}
 
-	base, err := cachePath(projectsCachePath)
+	base, err := cachePath(ProjectsCache)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func fetchProjectByProjectKey(projectKey string) error {
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(projectCachePath, nil); err != nil {
+	if err := setLastExecuted(ProjectCache, nil); err != nil {
 		return err
 	}
 
@@ -120,7 +120,7 @@ func fetchProjectById(projectId uint64) error {
 }
 
 func readProjects() (projects []backlog.Project, err error) {
-	base, err := cachePath(projectsCachePath)
+	base, err := cachePath(ProjectsCache)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func readProjects() (projects []backlog.Project, err error) {
 }
 
 func readProjectById(projectId uint64) (project backlog.Project, err error) {
-	base, err := cachePath(projectsCachePath)
+	base, err := cachePath(ProjectsCache)
 	if err != nil {
 		return project, err
 	}
@@ -171,7 +171,7 @@ func readProjectById(projectId uint64) (project backlog.Project, err error) {
 }
 
 func readProjectByProjectKey(projectKey string) (project backlog.Project, err error) {
-	base, err := cachePath(projectsCachePath)
+	base, err := cachePath(ProjectsCache)
 	if err != nil {
 		return project, err
 	}

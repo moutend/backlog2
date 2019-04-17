@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path/filepath"
 	"time"
 
 	backlog "github.com/moutend/go-backlog"
 )
 
 func fetchStatuses() error {
-	if time.Now().Sub(lastExecuted(statusesCachePath, nil)) < 365*24*time.Hour {
+	if time.Now().Sub(lastExecuted(StatusesCache, nil)) < 365*24*time.Hour {
 		return nil
 	}
 	statuses, err := client.GetStatuses()
@@ -22,14 +23,16 @@ func fetchStatuses() error {
 		return err
 	}
 
-	path, err := cachePath(statusesCachePath)
+	base, err := cachePath(StatusesCache)
 	if err != nil {
 		return err
 	}
+
+	path := filepath.Join(base, "statuses.json")
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(statusesCachePath, nil); err != nil {
+	if err := setLastExecuted(StatusesCache, nil); err != nil {
 		return err
 	}
 
@@ -37,11 +40,12 @@ func fetchStatuses() error {
 }
 
 func readStatuses() (statuses []backlog.Status, err error) {
-	path, err := cachePath(statusesCachePath)
+	base, err := cachePath(StatusesCache)
 	if err != nil {
 		return nil, err
 	}
 
+	path := filepath.Join(base, "statuses.json")
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err

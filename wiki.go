@@ -23,7 +23,7 @@ var wikiCommand = &cobra.Command{
 			return err
 		}
 
-		path, err := cachePath(wikisCachePath)
+		path, err := cachePath(WikisCache)
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ var wikiShowCommand = &cobra.Command{
 }
 
 func fetchWikis(query url.Values) error {
-	if time.Now().Sub(lastExecuted(wikisCachePath, query)) < 30*time.Minute {
+	if time.Now().Sub(lastExecuted(WikisCache, query)) < 30*time.Minute {
 		return nil
 	}
 
@@ -140,7 +140,7 @@ func fetchWikis(query url.Values) error {
 		return err
 	}
 
-	base, err := cachePath(wikisCachePath)
+	base, err := cachePath(WikisCache)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func fetchWikis(query url.Values) error {
 			return err
 		}
 	}
-	if err := setLastExecuted(wikisCachePath, query); err != nil {
+	if err := setLastExecuted(WikisCache, query); err != nil {
 		return err
 	}
 
@@ -164,7 +164,7 @@ func fetchWikis(query url.Values) error {
 }
 
 func fetchWiki(wikiId uint64) error {
-	if time.Now().Sub(lastExecuted(wikiCachePath, nil)) < 30*time.Minute {
+	if time.Now().Sub(lastExecuted(WikiCache, nil)) < 30*time.Minute {
 		return nil
 	}
 
@@ -173,7 +173,7 @@ func fetchWiki(wikiId uint64) error {
 		return err
 	}
 
-	base, err := cachePath(wikisCachePath)
+	base, err := cachePath(WikisCache)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func fetchWiki(wikiId uint64) error {
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(wikiCachePath, nil); err != nil {
+	if err := setLastExecuted(WikiCache, nil); err != nil {
 		return err
 	}
 
@@ -195,7 +195,7 @@ func fetchWiki(wikiId uint64) error {
 }
 
 func readWikis(projectId uint64) (wikis []backlog.Wiki, err error) {
-	base, err := cachePath(wikisCachePath)
+	base, err := cachePath(WikisCache)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func readWikis(projectId uint64) (wikis []backlog.Wiki, err error) {
 }
 
 func readWiki(wikiId uint64) (wiki backlog.Wiki, err error) {
-	base, err := cachePath(wikisCachePath)
+	base, err := cachePath(WikisCache)
 	if err != nil {
 		return wiki, err
 	}

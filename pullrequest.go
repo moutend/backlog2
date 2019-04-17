@@ -77,7 +77,7 @@ func fetchPullRequests(projectId, repositoryId uint64) error {
 		return err
 	}
 
-	base, err := cachePath(pullRequestsCachePath)
+	base, err := cachePath(PullRequestsCache)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func fetchPullRequests(projectId, repositoryId uint64) error {
 }
 
 func readPullRequests(projectId, repositoryId uint64) (prs []backlog.PullRequest, err error) {
-	base, err := cachePath(pullRequestsCachePath)
+	base, err := cachePath(PullRequestsCache)
 	if err != nil {
 		return nil, err
 	}

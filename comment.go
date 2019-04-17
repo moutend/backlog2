@@ -95,7 +95,7 @@ func fetchCommentsByIssueId(issueId uint64) error {
 		return err
 	}
 
-	base, err := cachePath(issueCommentsCachePath)
+	base, err := cachePath(IssueCommentsCache)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func fetchCommentsByIssueId(issueId uint64) error {
 }
 
 func readCommentsByIssueId(issueId uint64) (comments []backlog.Comment, err error) {
-	base, err := cachePath(issueCommentsCachePath)
+	base, err := cachePath(IssueCommentsCache)
 	if err != nil {
 		return nil, err
 	}

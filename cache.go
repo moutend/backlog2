@@ -12,76 +12,25 @@ import (
 	"time"
 )
 
-const (
-	issueCommentsCachePath = iota
-	issueTypesCachePath
-	issuesCachePath
-	issueCachePath
-	myselfCachePath
-	prioritiesCachePath
-	projectsCachePath
-	projectCachePath
-	pullRequestsCachePath
-	repositoriesCachePath
-	statusesCachePath
-	wikisCachePath
-	wikiCachePath
-)
+const CacheDir = ".backlog"
 
-const cacheDir = ".backlog"
-
-func cachePath(t int) (path string, err error) {
-	switch t {
-	case myselfCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "myself.json")
-	case projectsCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "projects")
-	case projectCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "project")
-	case pullRequestsCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "pullrequests")
-	case prioritiesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "priorities.json")
-	case repositoriesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "repositories")
-	case statusesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "statuses.json")
-	case issuesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "issues")
-	case issueTypesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "issuetypes")
-	case issueCommentsCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "issue_comments")
-	case wikisCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "wikis")
-	default:
-		err = fmt.Errorf("unnown type")
+func cachePath(ct cacheType) (path string, err error) {
+	if ct.String() == "" {
+		return path, fmt.Errorf("unknown cache type")
 	}
+
+	path = filepath.Join(CacheDir, "cache", space, ct.String())
 
 	return path, err
 }
 
-func lastExecutedPath(t int, query url.Values) (path string, err error) {
-	switch t {
-	case myselfCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "myself")
-	case projectsCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "projects")
-	case projectCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "project")
-	case prioritiesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "priorities")
-	case statusesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "statuses")
-	case repositoriesCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "repositories")
-	case wikisCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "wikis")
-	case wikiCachePath:
-		path = filepath.Join(cacheDir, "cache", space, "wiki")
-	default:
-		err = fmt.Errorf("unknown type")
+func lastExecutedPath(ct cacheType, query url.Values) (path string, err error) {
+	if ct.String() == "" {
+		return path, fmt.Errorf("unknown cache type")
 	}
+
+	path = filepath.Join(CacheDir, "cache", space, ct.String())
+
 	if hash := hashQuery(query); hash == "" {
 		path = fmt.Sprintf("%s.time", path)
 	} else {
@@ -91,7 +40,7 @@ func lastExecutedPath(t int, query url.Values) (path string, err error) {
 	return path, err
 }
 
-func lastExecuted(t int, query url.Values) time.Time {
+func lastExecuted(t cacheType, query url.Values) time.Time {
 	path, err := lastExecutedPath(t, query)
 	if err != nil {
 		return time.Time{}
@@ -107,7 +56,7 @@ func lastExecuted(t int, query url.Values) time.Time {
 	return v
 }
 
-func setLastExecuted(t int, query url.Values) error {
+func setLastExecuted(t cacheType, query url.Values) error {
 	path, err := lastExecutedPath(t, query)
 	if err != nil {
 		return err

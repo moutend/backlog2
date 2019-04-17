@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path/filepath"
 	"time"
 
 	backlog "github.com/moutend/go-backlog"
 )
 
 func fetchPriorities() error {
-	if time.Now().Sub(lastExecuted(prioritiesCachePath, nil)) < 365*24*time.Hour {
+	if time.Now().Sub(lastExecuted(PrioritiesCache, nil)) < 365*24*time.Hour {
 		return nil
 	}
 
@@ -23,14 +24,16 @@ func fetchPriorities() error {
 		return err
 	}
 
-	path, err := cachePath(prioritiesCachePath)
+	base, err := cachePath(PrioritiesCache)
 	if err != nil {
 		return err
 	}
+
+	path := filepath.Join(base, "priorities.json")
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
-	if err := setLastExecuted(prioritiesCachePath, nil); err != nil {
+	if err := setLastExecuted(PrioritiesCache, nil); err != nil {
 		return err
 	}
 
@@ -38,11 +41,12 @@ func fetchPriorities() error {
 }
 
 func readPriorities() (priorities []backlog.Priority, err error) {
-	path, err := cachePath(prioritiesCachePath)
+	base, err := cachePath(PrioritiesCache)
 	if err != nil {
 		return nil, err
 	}
 
+	path := filepath.Join(base, "priorities.json")
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
