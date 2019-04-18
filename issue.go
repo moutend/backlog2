@@ -28,9 +28,26 @@ var issueCommand = &cobra.Command{
 	},
 }
 
+var (
+	issueListMyselfFlag bool
+)
 var issueListCommand = &cobra.Command{
 	Use: "list",
 	RunE: func(c *cobra.Command, args []string) error {
+		var myself backlog.User
+
+		if issueListMyselfFlag {
+			err := fetchMyself()
+			if err != nil {
+				return err
+			}
+
+			myself, err = readMyself()
+			if err != nil {
+				return err
+			}
+		}
+
 		if err := fetchProjects(); err != nil {
 			return err
 		}
@@ -44,6 +61,10 @@ var issueListCommand = &cobra.Command{
 		query := url.Values{}
 		query.Add("sort", "updated")
 		query.Add("order", "desc")
+
+		if issueListMyselfFlag {
+			query.Add("assigneeId[]", fmt.Sprint(myself.Id))
+		}
 
 		for i, project := range projects {
 			if err := fetchIssues(project.Id, query); err != nil {
@@ -338,6 +359,8 @@ func readIssue(issueKey string) (issue backlog.Issue, err error) {
 }
 
 func init() {
+	issueListCommand.Flags().BoolVarP(&issueListMyselfFlag, "myself", "m", false, "pick issues assigned to myself")
+
 	issueCommand.AddCommand(issueListCommand)
 	issueCommand.AddCommand(issueShowCommand)
 	issueCommand.AddCommand(issueUpdateCommand)

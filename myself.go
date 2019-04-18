@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func fetchMyself() error {
-	if time.Now().Sub(lastExecuted(MyselfCache, nil)) < 365*24*time.Hour {
+	if time.Now().Sub(lastExecuted(MyselfCache, nil)) < 24*time.Hour {
 		return nil
 	}
 
@@ -28,6 +29,8 @@ func fetchMyself() error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	path := filepath.Join(base, "myself.json")
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
