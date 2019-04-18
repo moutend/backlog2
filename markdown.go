@@ -64,22 +64,22 @@ func parseIssueMarkdown(issueKey, path string) (url.Values, error) {
 	}
 
 	if issueKey != "" {
-		if err := fetchIssueByIssueKey(issueKey); err != nil {
+		if err := fetchIssue(issueKey); err != nil {
 			return nil, err
 		}
 
-		issue, err = readIssueByIssueKey(issueKey)
+		issue, err = readIssue(issueKey)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if fo.Parent != "" {
-		if err := fetchIssueByIssueKey(fo.Parent); err != nil {
+		if err := fetchIssue(fo.Parent); err != nil {
 			return nil, err
 		}
 
-		parentIssue, err = readIssueByIssueKey(fo.Parent)
+		parentIssue, err = readIssue(fo.Parent)
 		if err != nil {
 			return nil, err
 		}

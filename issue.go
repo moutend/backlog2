@@ -100,11 +100,14 @@ var issueShowCommand = &cobra.Command{
 		if len(args) < 1 {
 			return nil
 		}
-		if err := fetchIssueByIssueKey(args[0]); err != nil {
+
+		issueKey := args[0]
+
+		if err := fetchIssue(issueKey); err != nil {
 			return err
 		}
 
-		issue, err := readIssueByIssueKey(args[0])
+		issue, err := readIssue(issueKey)
 		if err != nil {
 			return err
 		}
@@ -129,11 +132,11 @@ var issueShowCommand = &cobra.Command{
 		var parentIssue backlog.Issue
 
 		if issue.ParentIssueId != 0 {
-			if err := fetchIssueById(issue.ParentIssueId); err != nil {
+			if err := fetchIssue(fmt.Sprint(issue.ParentIssueId)); err != nil {
 				return err
 			}
 
-			parentIssue, err = readIssueById(issue.ParentIssueId)
+			parentIssue, err = readIssue(fmt.Sprint(issue.ParentIssueId))
 			if err != nil {
 				return err
 			}
@@ -254,7 +257,7 @@ func fetchIssues(projectId uint64, query url.Values) error {
 	return nil
 }
 
-func fetchIssueByIssueKey(issueKey string) error {
+func fetchIssue(issueKey string) error {
 	issue, err := client.GetIssue(issueKey)
 	if err != nil {
 		return err
@@ -278,10 +281,6 @@ func fetchIssueByIssueKey(issueKey string) error {
 	}
 
 	return nil
-}
-
-func fetchIssueById(issueId uint64) error {
-	return fetchIssueByIssueKey(fmt.Sprint(issueId))
 }
 
 func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
@@ -318,7 +317,7 @@ func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
 	return issues, nil
 }
 
-func readIssueByIssueKey(issueKey string) (issue backlog.Issue, err error) {
+func readIssue(issueKey string) (issue backlog.Issue, err error) {
 	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return issue, err
@@ -345,24 +344,6 @@ func readIssueByIssueKey(issueKey string) (issue backlog.Issue, err error) {
 
 		return nil
 	})
-
-	return issue, nil
-}
-
-func readIssueById(issueId uint64) (issue backlog.Issue, err error) {
-	base, err := cachePath(IssuesCache)
-	if err != nil {
-		return issue, err
-	}
-
-	path := filepath.Join(base, fmt.Sprintf("%d.json", issueId))
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return issue, err
-	}
-	if err := json.Unmarshal(data, &issue); err != nil {
-		return issue, err
-	}
 
 	return issue, nil
 }
