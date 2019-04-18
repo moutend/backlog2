@@ -21,7 +21,8 @@ type ProjectIssues struct {
 }
 
 var issueCommand = &cobra.Command{
-	Use: "issue",
+	Use:     "issue",
+	Aliases: []string{"is"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if err := rootCommand.RunE(c, args); err != nil {
 			return err
@@ -76,11 +77,12 @@ var issueListCommand = &cobra.Command{
 
 			for _, issue := range pi.Issues {
 				fmt.Printf(
-					"  - [%s] (%s) %s (by %s)\n",
+					"  - [%s] (%s) %s (updated at %s by %s)\n",
 					issue.IssueKey,
 					issue.Status.Name,
 					issue.Summary,
-					issue.CreatedUser.Name,
+					issue.Updated.Time().Format("2006-01-02"),
+					issue.UpdatedUser.Name,
 				)
 			}
 		}

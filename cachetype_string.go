@@ -4,9 +4,9 @@ package main
 
 import "strconv"
 
-const _cacheType_name = "IssueCommentsCacheIssueTypesCacheIssuesCacheIssueCacheMyselfCachePrioritiesCacheProjectsCacheProjectCachePullRequestsCacheRepositoriesCacheStatusesCacheWikisCacheWikiCache"
+const _cacheType_name = "IssueCommentsCacheIssueTypesCacheIssuesCacheIssueCacheMyselfCachePrioritiesCacheProjectsCacheProjectCachePullRequestsCachePullRequestCommentsCacheRepositoriesCacheStatusesCacheWikisCacheWikiCache"
 
-var _cacheType_index = [...]uint8{0, 18, 33, 44, 54, 65, 80, 93, 105, 122, 139, 152, 162, 171}
+var _cacheType_index = [...]uint8{0, 18, 33, 44, 54, 65, 80, 93, 105, 122, 146, 163, 176, 186, 195}
 
 func (i cacheType) String() string {
 	if i < 0 || i >= cacheType(len(_cacheType_index)-1) {

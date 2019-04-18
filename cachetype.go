@@ -13,6 +13,7 @@ const (
 	ProjectsCache
 	ProjectCache
 	PullRequestsCache
+	PullRequestCommentsCache
 	RepositoriesCache
 	StatusesCache
 	WikisCache

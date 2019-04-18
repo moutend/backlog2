@@ -14,7 +14,8 @@ import (
 )
 
 var projectCommand = &cobra.Command{
-	Use: "project",
+	Use:     "project",
+	Aliases: []string{"p"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if err := rootCommand.RunE(c, args); err != nil {
 			return err

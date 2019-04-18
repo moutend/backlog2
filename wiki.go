@@ -69,7 +69,7 @@ var wikiListCommand = &cobra.Command{
 			fmt.Printf("- [%s] %s\n", project.ProjectKey, project.Name)
 
 			for _, wiki := range wikis {
-				fmt.Printf("  - %s updated %s (%d)\n", wiki.Name, wiki.Updated.Time().Format("2006-01-02"), wiki.Id)
+				fmt.Printf("  - %s updated at %s by %s (%d)\n", wiki.Name, wiki.Updated.Time().Format("2006-01-02"), wiki.UpdatedUser.Name, wiki.Id)
 			}
 		}
 

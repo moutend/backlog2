@@ -4,17 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	backlog "github.com/moutend/go-backlog"
 	"github.com/spf13/cobra"
 )
 
 var pullRequestCommand = &cobra.Command{
-	Use: "pullrequest",
+	Use:     "pullrequest",
+	Aliases: []string{"pr"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if err := rootCommand.RunE(c, args); err != nil {
 			return err
@@ -46,23 +49,16 @@ var pullRequestListCommand = &cobra.Command{
 			return err
 		}
 
-		if err := fetchRepositories(project.Id); err != nil {
+		if err := fetchRepository(project.Id, repositoryName); err != nil {
 			return err
 		}
 
-		repositories, err := readRepositories(project.Id)
+		repository, err := readRepository(project.Id, repositoryName)
 		if err != nil {
 			return err
 		}
 
-		var repository backlog.Repository
-
-		for _, repository = range repositories {
-			if repository.Name == repositoryName {
-				break
-			}
-		}
-		if err := fetchPullRequests(fmt.Sprint(project.Id), fmt.Sprint(repository.Id)); err != nil {
+		if err := fetchPullRequests(project.Id, repository.Id); err != nil {
 			return err
 		}
 
@@ -83,8 +79,16 @@ var pullRequestListCommand = &cobra.Command{
 	},
 }
 
-func fetchPullRequests(projectKeyOrId, repositoryNameOrId string) error {
-	prs, err := client.GetPullRequests(projectKeyOrId, repositoryNameOrId, nil)
+func fetchPullRequests(projectId, repositoryId uint64) error {
+	q := url.Values{}
+	q.Add("projectId", fmt.Sprint(projectId))
+	q.Add("repositoryId", fmt.Sprint(repositoryId))
+
+	if time.Now().Sub(lastExecuted(PullRequestsCache, q)) < 30*time.Minute {
+		return nil
+	}
+
+	pullRequests, err := client.GetPullRequests(fmt.Sprint(projectId), fmt.Sprint(repositoryId), nil)
 	if err != nil {
 		return err
 	}
@@ -96,23 +100,26 @@ func fetchPullRequests(projectKeyOrId, repositoryNameOrId string) error {
 
 	os.MkdirAll(base, 0755)
 
-	for _, pr := range prs {
-		data, err := json.Marshal(pr)
+	for _, pullRequest := range pullRequests {
+		data, err := json.Marshal(pullRequest)
 		if err != nil {
 			return err
 		}
 
-		path := filepath.Join(base, fmt.Sprintf("%d.json", pr.Id))
+		path := filepath.Join(base, fmt.Sprintf("%d.json", pullRequest.Id))
 		if err := ioutil.WriteFile(path, data, 0644); err != nil {
 			return err
 		}
+	}
+	if err := setLastExecuted(PullRequestsCache, q); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func fetchPullRequest(projectKeyOrId, repositoryNameOrId string, number int) error {
-	pr, err := client.GetPullRequest(projectKeyOrId, repositoryNameOrId, number, nil)
+func fetchPullRequest(projectId, repositoryId uint64, number string) error {
+	pullRequest, err := client.GetPullRequest(fmt.Sprint(projectId), fmt.Sprint(repositoryId), number, nil)
 	if err != nil {
 		return err
 	}
@@ -124,12 +131,12 @@ func fetchPullRequest(projectKeyOrId, repositoryNameOrId string, number int) err
 
 	os.MkdirAll(base, 0755)
 
-	data, err := json.Marshal(pr)
+	data, err := json.Marshal(pullRequest)
 	if err != nil {
 		return err
 	}
 
-	path := filepath.Join(base, fmt.Sprintf("%d.json", pr.Id))
+	path := filepath.Join(base, fmt.Sprintf("%d.json", pullRequest.Id))
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
 		return err
 	}
@@ -137,7 +144,7 @@ func fetchPullRequest(projectKeyOrId, repositoryNameOrId string, number int) err
 	return nil
 }
 
-func readPullRequests(projectId, repositoryId uint64) (prs []backlog.PullRequest, err error) {
+func readPullRequests(projectId, repositoryId uint64) (pullRequests []backlog.PullRequest, err error) {
 	base, err := cachePath(PullRequestsCache)
 	if err != nil {
 		return nil, err
@@ -153,13 +160,13 @@ func readPullRequests(projectId, repositoryId uint64) (prs []backlog.PullRequest
 			return err
 		}
 
-		var pr backlog.PullRequest
+		var pullRequest backlog.PullRequest
 
-		if err := json.Unmarshal(data, &pr); err != nil {
+		if err := json.Unmarshal(data, &pullRequest); err != nil {
 			return err
 		}
-		if pr.ProjectId == projectId && pr.RepositoryId == repositoryId {
-			prs = append(prs, pr)
+		if pullRequest.ProjectId == projectId && pullRequest.RepositoryId == repositoryId {
+			pullRequests = append(pullRequests, pullRequest)
 		}
 
 		return nil
@@ -168,10 +175,10 @@ func readPullRequests(projectId, repositoryId uint64) (prs []backlog.PullRequest
 		return nil, err
 	}
 
-	return prs, nil
+	return pullRequests, nil
 }
 
-func readPullRequest(projectId, repositoryId uint64, number int) (pullRequest backlog.PullRequest, err error) {
+func readPullRequest(projectId, repositoryId uint64, number string) (pullRequest backlog.PullRequest, err error) {
 	base, err := cachePath(PullRequestsCache)
 	if err != nil {
 		return pullRequest, err
@@ -192,7 +199,7 @@ func readPullRequest(projectId, repositoryId uint64, number int) (pullRequest ba
 		if err := json.Unmarshal(data, &pr); err != nil {
 			return err
 		}
-		if pr.ProjectId == projectId && pr.RepositoryId == repositoryId && pr.Number == number {
+		if pr.ProjectId == projectId && pr.RepositoryId == repositoryId && fmt.Sprint(pr.Number) == number {
 			pullRequest = pr
 		}
 
