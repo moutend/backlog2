@@ -19,10 +19,6 @@ var pullRequestCommand = &cobra.Command{
 	Use:     "pullrequest",
 	Aliases: []string{"pr"},
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := rootCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		return nil
 	},
 }
@@ -30,9 +26,6 @@ var pullRequestCommand = &cobra.Command{
 var pullRequestListCommand = &cobra.Command{
 	Use: "list",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := pullRequestCommand.RunE(c, args); err != nil {
-			return err
-		}
 		if len(args) < 2 {
 			return nil
 		}

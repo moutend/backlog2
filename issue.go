@@ -22,12 +22,8 @@ type ProjectIssues struct {
 
 var issueCommand = &cobra.Command{
 	Use:     "issue",
-	Aliases: []string{"is"},
+	Aliases: []string{"i"},
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := rootCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		return nil
 	},
 }
@@ -35,10 +31,6 @@ var issueCommand = &cobra.Command{
 var issueListCommand = &cobra.Command{
 	Use: "list",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := issueCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		if err := fetchProjects(); err != nil {
 			return err
 		}
@@ -64,7 +56,7 @@ var issueListCommand = &cobra.Command{
 			}
 
 			sort.Slice(issues, func(i, j int) bool {
-				return issues[i].Id > issues[j].Id
+				return issues[i].Updated.Time().After(issues[j].Updated.Time())
 			})
 			pis[i] = ProjectIssues{
 				Project: project,
@@ -94,9 +86,6 @@ var issueListCommand = &cobra.Command{
 var issueShowCommand = &cobra.Command{
 	Use: "show",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := issueCommand.RunE(c, args); err != nil {
-			return err
-		}
 		if len(args) < 1 {
 			return nil
 		}

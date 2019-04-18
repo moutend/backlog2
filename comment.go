@@ -28,10 +28,6 @@ var commentCommand = &cobra.Command{
 	Use:     "comment",
 	Aliases: []string{"c"},
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := rootCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		return nil
 	},
 }
@@ -39,9 +35,6 @@ var commentCommand = &cobra.Command{
 var commentShowCommand = &cobra.Command{
 	Use: "show",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := commentCommand.RunE(c, args); err != nil {
-			return err
-		}
 		if len(args) == 0 {
 			return nil
 		}

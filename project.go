@@ -17,10 +17,6 @@ var projectCommand = &cobra.Command{
 	Use:     "project",
 	Aliases: []string{"p"},
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := rootCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		return nil
 	},
 }
@@ -28,9 +24,6 @@ var projectCommand = &cobra.Command{
 var projectListCommand = &cobra.Command{
 	Use: "list",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := projectCommand.RunE(c, args); err != nil {
-			return err
-		}
 		if err := fetchProjects(); err != nil {
 			return err
 		}

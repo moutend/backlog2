@@ -18,10 +18,6 @@ var repositoryCommand = &cobra.Command{
 	Use:     "repository",
 	Aliases: []string{"r"},
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := rootCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		return nil
 	},
 }
@@ -29,10 +25,6 @@ var repositoryCommand = &cobra.Command{
 var repositoryListCommand = &cobra.Command{
 	Use: "list",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := repositoryCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		if err := fetchProjects(); err != nil {
 			return err
 		}

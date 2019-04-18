@@ -19,17 +19,6 @@ import (
 var wikiCommand = &cobra.Command{
 	Use: "wiki",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := rootCommand.RunE(c, args); err != nil {
-			return err
-		}
-
-		path, err := cachePath(WikisCache)
-		if err != nil {
-			return err
-		}
-
-		os.MkdirAll(path, 0755)
-
 		return nil
 	},
 }
@@ -37,10 +26,6 @@ var wikiCommand = &cobra.Command{
 var wikiListCommand = &cobra.Command{
 	Use: "list",
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := wikiCommand.RunE(c, args); err != nil {
-			return err
-		}
-
 		if err := fetchProjects(); err != nil {
 			return err
 		}
@@ -145,6 +130,8 @@ func fetchWikis(query url.Values) error {
 		return err
 	}
 
+	os.MkdirAll(base, 0755)
+
 	for _, wiki := range wikis {
 		data, err := json.Marshal(wiki)
 		if err != nil {
@@ -177,6 +164,8 @@ func fetchWiki(wikiId uint64) error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	data, err := json.Marshal(wiki)
 	if err != nil {

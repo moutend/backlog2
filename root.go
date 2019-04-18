@@ -17,7 +17,7 @@ var (
 
 var rootCommand = &cobra.Command{
 	Use: "backlog",
-	RunE: func(c *cobra.Command, args []string) error {
+	PersistentPreRunE: func(c *cobra.Command, args []string) error {
 		var err error
 
 		space = os.Getenv("BACKLOG_SPACE")
