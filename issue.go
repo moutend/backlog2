@@ -15,11 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type ProjectIssues struct {
-	Project backlog.Project
-	Issues  []backlog.Issue
-}
-
 var issueCommand = &cobra.Command{
 	Use:     "issue",
 	Aliases: []string{"i"},
@@ -32,9 +27,10 @@ var (
 	issueListMyselfFlag bool
 )
 var issueListCommand = &cobra.Command{
-	Use: "list",
+	Use:     "list",
+	Aliases: []string{"l"},
 	RunE: func(c *cobra.Command, args []string) error {
-		var myself backlog.User
+		var assignee backlog.User
 
 		if issueListMyselfFlag {
 			err := fetchMyself()
@@ -42,7 +38,7 @@ var issueListCommand = &cobra.Command{
 				return err
 			}
 
-			myself, err = readMyself()
+			assignee, err = readMyself()
 			if err != nil {
 				return err
 			}
@@ -57,16 +53,15 @@ var issueListCommand = &cobra.Command{
 			return err
 		}
 
-		pis := make([]ProjectIssues, len(projects))
 		query := url.Values{}
 		query.Add("sort", "updated")
 		query.Add("order", "desc")
 
-		if issueListMyselfFlag {
-			query.Add("assigneeId[]", fmt.Sprint(myself.Id))
+		if assignee.Id != 0 {
+			query.Add("assigneeId[]", fmt.Sprint(assignee.Id))
 		}
 
-		for i, project := range projects {
+		for _, project := range projects {
 			if err := fetchIssues(project.Id, query); err != nil {
 				return err
 			}
@@ -79,16 +74,14 @@ var issueListCommand = &cobra.Command{
 			sort.Slice(issues, func(i, j int) bool {
 				return issues[i].Updated.Time().After(issues[j].Updated.Time())
 			})
-			pis[i] = ProjectIssues{
-				Project: project,
-				Issues:  issues,
-			}
-		}
 
-		for _, pi := range pis {
-			fmt.Printf("- [%s] %s\n", pi.Project.ProjectKey, pi.Project.Name)
+			fmt.Printf("- [%s] %s\n", project.ProjectKey, project.Name)
 
-			for _, issue := range pi.Issues {
+			for _, issue := range issues {
+				if assignee.Id != 0 && assignee.Id != issue.Assignee.Id {
+					continue
+				}
+
 				fmt.Printf(
 					"  - [%s] (%s) %s (updated at %s by %s)\n",
 					issue.IssueKey,
@@ -105,7 +98,8 @@ var issueListCommand = &cobra.Command{
 }
 
 var issueShowCommand = &cobra.Command{
-	Use: "show",
+	Use:     "show",
+	Aliases: []string{"s"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if len(args) < 1 {
 			return nil
@@ -122,21 +116,13 @@ var issueShowCommand = &cobra.Command{
 			return err
 		}
 
-		if err := fetchProjects(); err != nil {
+		if err := fetchProjectById(issue.ProjectId); err != nil {
 			return err
 		}
 
-		projects, err := readProjects()
+		project, err := readProjectById(issue.ProjectId)
 		if err != nil {
 			return err
-		}
-
-		var project backlog.Project
-
-		for _, project = range projects {
-			if issue.ProjectId == project.Id {
-				break
-			}
 		}
 
 		var parentIssue backlog.Issue
@@ -327,7 +313,7 @@ func readIssues(projectId uint64) (issues []backlog.Issue, err error) {
 	return issues, nil
 }
 
-func readIssue(issueKey string) (issue backlog.Issue, err error) {
+func readIssue(issueKeyOrId string) (issue backlog.Issue, err error) {
 	base, err := cachePath(IssuesCache)
 	if err != nil {
 		return issue, err
@@ -348,7 +334,7 @@ func readIssue(issueKey string) (issue backlog.Issue, err error) {
 		if err := json.Unmarshal(data, &i); err != nil {
 			return err
 		}
-		if i.IssueKey == issueKey {
+		if i.IssueKey == issueKeyOrId || fmt.Sprint(i.Id) == issueKeyOrId {
 			issue = i
 		}
 
