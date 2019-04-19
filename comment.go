@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	backlog "github.com/moutend/go-backlog"
@@ -33,7 +35,8 @@ var commentCommand = &cobra.Command{
 }
 
 var commentShowCommand = &cobra.Command{
-	Use: "show",
+	Use:     "show",
+	Aliases: []string{"s"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return nil
@@ -97,6 +100,11 @@ var commentShowCommand = &cobra.Command{
 		default:
 			return fmt.Errorf("specify issue or pull-request")
 		}
+
+		sort.Slice(comments, func(i, j int) bool {
+			return comments[i].Created.Time().Before(comments[j].Created.Time())
+		})
+		fmt.Printf("found %d comment(s)\n", len(comments))
 		for i, _ := range comments {
 			comment := comments[len(comments)-i-1]
 			if len(comment.ChangeLog) > 0 {
@@ -114,7 +122,9 @@ var commentShowCommand = &cobra.Command{
 }
 
 func fetchIssueComments(issueId uint64) error {
-	comments, err := client.GetIssueComments(issueId, nil)
+	query := url.Values{}
+	query.Add("count", "100")
+	comments, err := client.GetIssueComments(issueId, query)
 	if err != nil {
 		return err
 	}
