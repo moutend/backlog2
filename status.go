@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -27,6 +28,8 @@ func fetchStatuses() error {
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(base, 0755)
 
 	path := filepath.Join(base, "statuses.json")
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {

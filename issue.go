@@ -171,11 +171,9 @@ var issueShowCommand = &cobra.Command{
 }
 
 var issueUpdateCommand = &cobra.Command{
-	Use: "update",
+	Use:     "update",
+	Aliases: []string{"u"},
 	RunE: func(c *cobra.Command, args []string) error {
-		if err := issueCommand.RunE(c, args); err != nil {
-			return err
-		}
 		if len(args) < 2 {
 			return nil
 		}
@@ -183,17 +181,25 @@ var issueUpdateCommand = &cobra.Command{
 		issueKey := args[0]
 		filePath := args[1]
 
-		v, err := parseIssueMarkdown(issueKey, filePath)
+		query, err := parseIssueMarkdown(issueKey, filePath)
 		if err != nil {
 			return err
 		}
-		fmt.Println(v)
+
+		issue, err := client.UpdateIssue(issueKey, query)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("updated", issue.IssueKey)
+
 		return nil
 	},
 }
 
 var issueCreateCommand = &cobra.Command{
-	Use: "create",
+	Use:     "create",
+	Aliases: []string{"c"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if err := issueCommand.RunE(c, args); err != nil {
 			return err
