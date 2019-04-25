@@ -132,6 +132,12 @@ func parseIssueMarkdown(issueKey, path string) (url.Values, error) {
 	values.Add("estimatedHours", fmt.Sprint(fo.Estimated))
 	values.Add("actualHours", fmt.Sprint(fo.Actual))
 
+	if priority.Id > 0 {
+		values.Add("priorityId", fmt.Sprint(priority.Id))
+	}
+	if status.Id > 0 {
+		values.Add("statusId", fmt.Sprint(status.Id))
+	}
 	if issue.Id != 0 {
 		values.Add("assigneeId", fmt.Sprint(issue.Assignee.Id))
 	}
