@@ -17,14 +17,16 @@ import (
 )
 
 var wikiCommand = &cobra.Command{
-	Use: "wiki",
+	Use:     "wiki",
+	Aliases: []string{"w"},
 	RunE: func(c *cobra.Command, args []string) error {
 		return nil
 	},
 }
 
 var wikiListCommand = &cobra.Command{
-	Use: "list",
+	Use:     "list",
+	Aliases: []string{"l"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if err := fetchProjects(); err != nil {
 			return err
@@ -63,7 +65,8 @@ var wikiListCommand = &cobra.Command{
 }
 
 var wikiShowCommand = &cobra.Command{
-	Use: "show",
+	Use:     "show",
+	Aliases: []string{"s"},
 	RunE: func(c *cobra.Command, args []string) error {
 		if err := wikiCommand.RunE(c, args); err != nil {
 			return err
