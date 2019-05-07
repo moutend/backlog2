@@ -72,6 +72,38 @@ var pullRequestListCommand = &cobra.Command{
 	},
 }
 
+var pullRequestCreateCommand = &cobra.Command{
+	Use:     "create",
+	Aliases: []string{"c"},
+	RunE: func(c *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return nil
+		}
+
+		path := args[0]
+
+		query, err := parsePullRequestMarkdown(path)
+		if err != nil {
+			return err
+		}
+
+		project := query.Get("project")
+		repository := query.Get("repository")
+
+		query.Del("project")
+		query.Del("repository")
+
+		pullRequest, err := client.CreatePullRequest(project, repository, query)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("created pull request is %d\n", pullRequest.Id)
+
+		return nil
+	},
+}
+
 func fetchPullRequests(projectId, repositoryId uint64) error {
 	q := url.Values{}
 	q.Add("projectId", fmt.Sprint(projectId))
@@ -207,6 +239,7 @@ func readPullRequest(projectId, repositoryId uint64, number string) (pullRequest
 
 func init() {
 	pullRequestCommand.AddCommand(pullRequestListCommand)
+	pullRequestCommand.AddCommand(pullRequestCreateCommand)
 
 	rootCommand.AddCommand(pullRequestCommand)
 }

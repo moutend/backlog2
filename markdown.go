@@ -157,3 +157,62 @@ func parseIssueMarkdown(issueKey, path string) (url.Values, error) {
 
 	return values, nil
 }
+
+type pullRequestFrontmatterOption struct {
+	Summary    string `fm:"summary"`
+	Project    string `fm:"project"`
+	Repository string `fm:"repository"`
+	Issue      string `fm:"issue"`
+	Base       string `fm:"base"`
+	Branch     string `fm:"branch"`
+	Content    string `fm:"content"`
+}
+
+func parsePullRequestMarkdown(path string) (url.Values, error) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var fo pullRequestFrontmatterOption
+
+	if err := frontmatter.Unmarshal(data, &fo); err != nil {
+		return nil, err
+	}
+
+	var (
+		myself backlog.User
+		issue  backlog.Issue
+	)
+
+	if err := fetchMyself(); err != nil {
+		return nil, err
+	}
+
+	myself, err = readMyself()
+	if err != nil {
+		return nil, err
+	}
+	if fo.Issue != "" {
+		if err := fetchIssue(fo.Issue); err != nil {
+			return nil, err
+		}
+
+		issue, err = readIssue(fo.Issue)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	values := url.Values{}
+	values.Add("summary", fo.Summary)
+	values.Add("project", fo.Project)
+	values.Add("repository", fo.Repository)
+	values.Add("description", fo.Content)
+	values.Add("base", fo.Base)
+	values.Add("branch", fo.Branch)
+	values.Add("issueId", fmt.Sprint(issue.Id))
+	values.Add("assigneeId", fmt.Sprint(myself.Id))
+
+	return values, nil
+}
